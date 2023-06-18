@@ -44,7 +44,14 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.values = util.Counter() # A Counter is a dict with default 0
 
         # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+        for epoch in range(iterations):
+          epoch_values = self.values.copy()
+          for state in mdp.getStates():
+              state_values = util.Counter()
+              for action in mdp.getPossibleActions(state):
+                  for s, p in mdp.getTransitionStatesAndProbs(state, action):
+                      state_values[action] += p * (mdp.getReward(state, action, s) + discount * epoch_values[s])
+              self.values[state] = state_values[state_values.argMax()]
 
 
     def getValue(self, state):
@@ -59,8 +66,12 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        value = 0
+        transitionFunction = self.mdp.getTransitionStatesAndProbs(state,action)
+        for s, p in transitionFunction:
+          value += p * (self.mdp.getReward(state, action, s) + (self.discount * self.values[s]))
+
+        return value
 
     def computeActionFromValues(self, state):
         """
@@ -71,8 +82,16 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions = self.mdp.getPossibleActions(state)
+        if not actions:
+            return None
+
+        values = util.Counter()
+        for action in actions:
+            for s, p in self.mdp.getTransitionStatesAndProbs(state, action):
+                values[action] += p * (self.mdp.getReward(state, action, s) + self.discount * self.values[s])
+
+        return values.argMax()
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
